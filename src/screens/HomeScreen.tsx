@@ -83,6 +83,7 @@ const handleOpen = (item: DocumentItem) => {
       title: doc.name.replace(/\.pdf$/i, ''),
       html: doc.html,
       templateId: doc.templateId,
+      cover: doc.cover,
     });
   } else {
     openEditor(doc);

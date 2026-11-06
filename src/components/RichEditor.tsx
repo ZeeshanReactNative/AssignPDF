@@ -11,7 +11,8 @@ import {
   DEFAULT_FONT_SIZE,
   DEFAULT_TEXT_COLOR,
 } from '../constants/editor';
-
+import type { CoverDetails } from '../utils/cover';
+import { buildCoverHtml, COVER_CSS } from '../utils/coverHtml';
 export type FormatState = {
   bold: boolean;
   italic: boolean;
@@ -36,6 +37,7 @@ type RichEditorProps = {
   onChange?: (html: string) => void;
   onFormatChange?: (state: FormatState) => void;
   initialHtml?: string; // purana document kholne ke liye
+  cover?: CoverDetails;
 };
 
 const EDITOR_HTML = `
@@ -131,14 +133,28 @@ const EDITOR_HTML = `
     color: #98A2B3;
     pointer-events: none;
   }
+  ${COVER_CSS}
+
+  #sheet { position: relative; }
+
+  #cover {
+    display: none;
+    margin-bottom: var(--gap);
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #cover.on { display: block; }
 </style>
 </head>
 
 <body>
 
   <div id="wrap">
-    <div id="page" contenteditable="true" data-placeholder="Yahan likhna shuru karo..."><div><br></div></div>
-    <div id="nums"></div>
+    <div id="cover"></div>
+    <div id="sheet">
+      <div id="page" contenteditable="true" data-placeholder="Yahan likhna shuru karo..."><div><br></div></div>
+      <div id="nums"></div>
+    </div>
   </div>
 
 <script>
@@ -175,6 +191,7 @@ const EDITOR_HTML = `
     s.setProperty('--c', (PH - 2 * P) + 'px');
     s.setProperty('--gap', GAP + 'px');
     s.setProperty('--nf', Math.max(10, Math.round(w * 0.03)) + 'px');
+    s.setProperty('--cu', (w / 100) + 'px');
   }
 
   // Sabse pehle: page ka size set ho jaye, chahe aage kuch bhi ho
@@ -424,6 +441,18 @@ const EDITOR_HTML = `
     }
   };
 
+  // Cover page dikhao ya chhupao
+  window.setCover = function (html) {
+    try {
+      var el = document.getElementById('cover');
+      el.innerHTML = html || '';
+      el.className = html ? 'on' : '';
+      fitPages();
+    } catch (e) {
+      send({ type: 'error', data: 'setCover: ' + e.message });
+    }
+  };
+
   // Text ka color: selection par, ya khali cursor ho to agle text par
   window.setColor = function (hex) {
     try {
@@ -636,12 +665,19 @@ const EDITOR_HTML = `
 `;
 
 export const RichEditor = forwardRef<RichEditorHandle, RichEditorProps>(
-  ({ onChange, onFormatChange, initialHtml }, ref) => {
+  ({ onChange, onFormatChange, initialHtml, cover }, ref) => {
     const webRef = useRef<WebView>(null);
     const [ready, setReady] = useState(false);
 
     const run = (js: string) =>
       webRef.current?.injectJavaScript(`${js}; true;`);
+
+    // Cover: WebView load hone ke baad, ya cover badalne par
+    useEffect(() => {
+      if (!ready) return;
+      const html = cover ? buildCoverHtml(cover) : '';
+      run(`window.setCover(${JSON.stringify(html)})`);
+    }, [ready, cover]);
 
     // WebView load ho jaye aur html mil jaye, tab saved content daalo
     useEffect(() => {

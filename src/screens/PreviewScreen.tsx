@@ -11,27 +11,25 @@ import { createPdf, savePdfToDevice, sharePdf } from '../utils/pdf';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Preview'>;
 
-// Kaunsa kaam chal raha hai (ek waqt mein sirf ek)
 type Busy = 'download' | 'share' | null;
 
 export default function PreviewScreen({ navigation, route }: Props) {
-  const { title, html, templateId } = route.params;
+  const { title, html, templateId, cover } = route.params;
   const [busy, setBusy] = useState<Busy>(null);
 
   const handleDownload = async () => {
     if (busy) return;
     setBusy('download');
     try {
-      const path = await createPdf(title, html);
+      const path = await createPdf(title, html, cover);
       const savedName = await savePdfToDevice(title, path);
 
       if (savedName) {
-        await savePdfRecord({ name: savedName, templateId, html });
-        Alert.alert(
-          'PDF save ho gayi',
-          Platform.OS === 'android'
-            ? `${savedName} Downloads folder mein save ho gayi.`
-            : `${savedName} save ho gayi.`,
+        await savePdfRecord({ name: savedName, templateId, html, cover });
+       Alert.alert(
+  'PDF Downloaded Successfully',
+  `File Location:Downloads/AssignPDF/${savedName}`,
+  [{ text: 'OK' }],
         );
       }
     } catch (e) {
@@ -45,7 +43,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
     if (busy) return;
     setBusy('share');
     try {
-      const path = await createPdf(title, html);
+      const path = await createPdf(title, html, cover);
       await sharePdf(title, path);
     } catch (e) {
       Alert.alert('Share nahi hui', e instanceof Error ? e.message : 'Unknown error');
@@ -75,7 +73,7 @@ export default function PreviewScreen({ navigation, route }: Props) {
         }
       />
 
-      <PreviewViewer html={html} />
+      <PreviewViewer html={html} cover={cover} />
     </ScreenContainer>
   );
 }

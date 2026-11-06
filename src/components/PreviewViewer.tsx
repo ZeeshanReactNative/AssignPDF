@@ -5,16 +5,19 @@ import {
   DEFAULT_FONT_SIZE,
   DEFAULT_TEXT_COLOR,
 } from '../constants/editor';
+import type { CoverDetails } from '../utils/cover';
+import { buildCoverHtml, COVER_CSS } from '../utils/coverHtml';
 
 type PreviewViewerProps = {
-  html: string; // Editor ka saved HTML
+  html: string; // document ka text
+  cover?: CoverDetails; // nahi ho to cover nahi dikhta
 };
 
 // Document ka HTML script ke andar safe tareeqe se jane ke liye
 const toSafeJson = (value: string) =>
   JSON.stringify(value).replace(/</g, '\\u003c');
 
-const buildHtml = (content: string) => `
+const buildHtml = (content: string, coverHtml: string) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -25,6 +28,10 @@ const buildHtml = (content: string) => `
   body { padding: 16px 12px 40px; }
 
   #wrap { position: relative; width: var(--w); margin: 0 auto; }
+  #sheet { position: relative; }
+
+  ${COVER_CSS}
+  #cover { margin-bottom: var(--gap); }
 
   #page {
     position: relative;
@@ -66,8 +73,11 @@ const buildHtml = (content: string) => `
 
 <body>
   <div id="wrap">
-    <div id="page"></div>
-    <div id="nums"></div>
+    ${coverHtml ? `<div id="cover">${coverHtml}</div>` : ''}
+    <div id="sheet">
+      <div id="page"></div>
+      <div id="nums"></div>
+    </div>
   </div>
 
 <script>
@@ -88,10 +98,10 @@ const buildHtml = (content: string) => `
     s.setProperty('--c', (PH - 2 * P) + 'px');
     s.setProperty('--gap', GAP + 'px');
     s.setProperty('--nf', Math.max(10, Math.round(w * 0.03)) + 'px');
+    s.setProperty('--cu', (w / 100) + 'px');
   }
 
   function build() {
-    // Spacers pehle, phir document ka text
     var frag = document.createDocumentFragment();
     for (var i = 0; i < MAX_PAGES; i++) {
       var f = document.createElement('div');
@@ -152,9 +162,11 @@ const buildHtml = (content: string) => `
 </html>
 `;
 
-export function PreviewViewer({ html }: PreviewViewerProps) {
-  // html badle tabhi dobara banao
-  const source = useMemo(() => ({ html: buildHtml(html) }), [html]);
+export function PreviewViewer({ html, cover }: PreviewViewerProps) {
+  const source = useMemo(
+    () => ({ html: buildHtml(html, cover ? buildCoverHtml(cover) : '') }),
+    [html, cover],
+  );
 
   return (
     <WebView

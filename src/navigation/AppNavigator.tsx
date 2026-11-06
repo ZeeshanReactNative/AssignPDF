@@ -12,6 +12,7 @@ import type { RootStackParamList } from './types';
 import TemplatesScreen from '../screens/TemplatesScreen';
 import EditorScreen from '../screens/PageEditorScreen';
 import PreviewScreen from '../screens/PreviewScreen';
+import CoverFormScreen from '../screens/CoverFormScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -43,6 +44,7 @@ export const AppNavigator = () => (
        <Stack.Screen name="Templates" component={TemplatesScreen} />
        <Stack.Screen name="Editor" component={EditorScreen} />
        <Stack.Screen name="Preview" component={PreviewScreen} />
+       <Stack.Screen name="CoverForm" component={CoverFormScreen} />
     </Stack.Navigator>
   </NavigationContainer>
 );

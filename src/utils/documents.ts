@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CoverDetails } from './cover';
 
 const KEY = 'documents';
 
@@ -8,7 +9,9 @@ export type SavedDocument = {
   templateId: string;
   html: string;
   updatedAt: number; // Date.now()
-   type?: 'saved' | 'pdf'
+   type?: 'saved' | 'pdf',
+   cover?: CoverDetails;
+
 };
 
 export async function getDocuments(): Promise<SavedDocument[]> {
@@ -37,12 +40,14 @@ export async function savePdfRecord(doc: {
   name: string;
   templateId: string;
   html: string;
+  cover?: CoverDetails;
 }) {
   await saveDocument({
     id: `pdf-${Date.now()}`,
     name: doc.name,
     templateId: doc.templateId,
     html: doc.html,
+    cover: doc.cover,
     updatedAt: Date.now(),
     type: 'pdf',
   });

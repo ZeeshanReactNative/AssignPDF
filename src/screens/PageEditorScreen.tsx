@@ -17,18 +17,19 @@ import {
 } from '../constants/editor';
 import type { RootStackParamList } from '../navigation/types';
 import { getDocument, saveDocument } from '../utils/documents';
+import { CoverDetails } from '../utils/cover';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Editor'>;
 
 export default function EditorScreen({ navigation, route }: Props) {
   const { title, templateId, documentId } = route.params;
-
+const [cover, setCover] = useState<CoverDetails | undefined>(route.params.cover);
   // Naya document ho to id ab bana lo, taake dobara Save par duplicate na bane
   const idRef = useRef(documentId ?? Date.now().toString());
 
   const editorRef = useRef<RichEditorHandle>(null);
   const [html, setHtml] = useState('');
-  const [initialHtml, setInitialHtml] = useState<string>();
+const [initialHtml, setInitialHtml] = useState<string>();
   const [saved, setSaved] = useState(false);
   const [format, setFormat] = useState<FormatState>({
     bold: false,
@@ -47,6 +48,7 @@ export default function EditorScreen({ navigation, route }: Props) {
       if (doc) {
         setHtml(doc.html);
         setInitialHtml(doc.html);
+        setCover(doc.cover);
       }
     });
   }, [documentId]);
@@ -62,6 +64,7 @@ export default function EditorScreen({ navigation, route }: Props) {
       name: title,
       templateId,
       html,
+      cover,
       updatedAt: Date.now(),
     });
     setSaved(true);
@@ -82,7 +85,7 @@ export default function EditorScreen({ navigation, route }: Props) {
             <HeaderAction
               label="Export PDF"
               variant="accent"
-              onPress={() => navigation.navigate('Preview', { title, html, templateId })}
+             onPress={() => navigation.navigate('Preview', { title, html, templateId, cover })}
             />
           </View>
         }
@@ -90,12 +93,13 @@ export default function EditorScreen({ navigation, route }: Props) {
 
       <EditorToolbar format={format} editorRef={editorRef} />
 
-      <RichEditor
-        ref={editorRef}
-        initialHtml={initialHtml}
-        onChange={handleChange}
-        onFormatChange={setFormat}
-      />
+     <RichEditor
+  ref={editorRef}
+  initialHtml={initialHtml}
+  cover={cover}
+  onChange={handleChange}
+  onFormatChange={setFormat}
+/>
     </ScreenContainer>
   );
 }
