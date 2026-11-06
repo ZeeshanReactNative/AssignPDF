@@ -8,6 +8,7 @@ export type SavedDocument = {
   templateId: string;
   html: string;
   updatedAt: number; // Date.now()
+   type?: 'saved' | 'pdf'
 };
 
 export async function getDocuments(): Promise<SavedDocument[]> {
@@ -31,6 +32,21 @@ export async function saveDocument(doc: SavedDocument) {
   await AsyncStorage.setItem(KEY, JSON.stringify([doc, ...rest]));
 }
 
+// PDF export hone par recent list mein record daalo
+export async function savePdfRecord(doc: {
+  name: string;
+  templateId: string;
+  html: string;
+}) {
+  await saveDocument({
+    id: `pdf-${Date.now()}`,
+    name: doc.name,
+    templateId: doc.templateId,
+    html: doc.html,
+    updatedAt: Date.now(),
+    type: 'pdf',
+  });
+}
 // 10m ago, 1h ago, 2d ago
 export function timeAgo(timestamp: number): string {
   const minutes = Math.floor((Date.now() - timestamp) / 60000);

@@ -1,6 +1,6 @@
 import { Pressable } from 'react-native';
 import { AppText } from './AppText';
-// import { Icon } from './Icon';
+import { Icon } from './Icons';
 import { colors } from '../theme/colors';
 import { shadows } from '../theme/shadows';
 
@@ -19,7 +19,7 @@ export function FAB({ label, onPress }: FABProps) {
       <AppText variant="button" className="mr-2 text-content-inverse">
         {label}
       </AppText>
-      {/* <Icon name="plus" size={20} color={colors.text.inverse} /> */}
+      <Icon name="plus" size={18} color={colors.text.inverse} />
     </Pressable>
   );
 }

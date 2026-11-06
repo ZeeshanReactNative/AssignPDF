@@ -82,7 +82,7 @@ export default function EditorScreen({ navigation, route }: Props) {
             <HeaderAction
               label="Export PDF"
               variant="accent"
-              onPress={() => navigation.navigate('Preview', { title, html })}
+              onPress={() => navigation.navigate('Preview', { title, html, templateId })}
             />
           </View>
         }

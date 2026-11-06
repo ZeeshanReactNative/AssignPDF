@@ -65,7 +65,7 @@ import {
   DEFAULT_FONT_SIZE,
   DEFAULT_TEXT_COLOR,
 } from '../constants/editor';
-
+import Share from 'react-native-share';
 // A4 in points (1 point = 1/72 inch)
 const A4_WIDTH = 595;
 const A4_HEIGHT = 842;
@@ -140,4 +140,13 @@ export async function savePdfToDevice(
   }
 
   return fileName;
+}
+// Banayi hui PDF ko WhatsApp / Gmail / Drive etc. ko bhejta hai
+export async function sharePdf(title: string, filePath: string): Promise<void> {
+  await Share.open({
+    url: `file://${filePath}`, // file:// lagana zaroori hai
+    type: 'application/pdf',
+    title,
+    failOnCancel: false, // user share sheet band kare to error nahi
+  });
 }

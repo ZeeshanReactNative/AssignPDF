@@ -1,9 +1,10 @@
 export const icons = {
-  // menu: require('./menu.png'),
-  // search: require('./search.png'),
+  menu: require('./icons/menu.png'),
+  logo: require('./icons/logo.png'),
   more: require('./icons/more.png'),
-  // plus: require('./plus.png'),
+  plus: require('./icons/plus.png'),
   file: require('./icons/file.png'),
+  filepdf: require('./icons/file-pdf.png'),
   back: require('./icons/back.png'),
  alignLeft: require('./icons/align-left.png'),
   alignCenter: require('./icons/align-center.png'),

@@ -1,49 +1,58 @@
 import { useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Header } from '../components/Header';
 import { HeaderAction } from '../components/HeaderAction';
 import { PreviewViewer } from '../components/PreviewViewer';
 import { ScreenContainer } from '../components/ScreenContainer';
 import type { RootStackParamList } from '../navigation/types';
-import { createPdf, savePdfToDevice } from '../utils/pdf';
+import { savePdfRecord } from '../utils/documents';
+import { createPdf, savePdfToDevice, sharePdf } from '../utils/pdf';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Preview'>;
 
+// Kaunsa kaam chal raha hai (ek waqt mein sirf ek)
+type Busy = 'download' | 'share' | null;
+
 export default function PreviewScreen({ navigation, route }: Props) {
-  const { title, html } = route.params;
-  const [busy, setBusy] = useState(false);
+  const { title, html, templateId } = route.params;
+  const [busy, setBusy] = useState<Busy>(null);
 
- const handleDownload = async () => {
-  if (busy) return;
+  const handleDownload = async () => {
+    if (busy) return;
+    setBusy('download');
+    try {
+      const path = await createPdf(title, html);
+      const savedName = await savePdfToDevice(title, path);
 
-  setBusy(true);
+      if (savedName) {
+        await savePdfRecord({ name: savedName, templateId, html });
+        Alert.alert(
+          'PDF save ho gayi',
+          Platform.OS === 'android'
+            ? `${savedName} Downloads folder mein save ho gayi.`
+            : `${savedName} save ho gayi.`,
+        );
+      }
+    } catch (e) {
+      Alert.alert('PDF save nahi hui', e instanceof Error ? e.message : 'Unknown error');
+    } finally {
+      setBusy(null);
+    }
+  };
 
-  try {
-    const filePath = await createPdf(title, html);
-
-    console.log('[PDF] Generated:', filePath);
-
-    const savedName = await savePdfToDevice(title, filePath);
-
-    const downloadPath = 'Downloads/AssignPDF';
-
-    Alert.alert(
-  'PDF Downloaded Successfully',
-  `File Location\n\nDownloads/AssignPDF/${savedName}`,
-  [{ text: 'OK' }],
-);
-  } catch (error) {
-    console.error('[PDF] Download error:', error);
-
-    Alert.alert(
-      'PDF Save Failed',
-      error instanceof Error ? error.message : 'Unable to save PDF.',
-    );
-  } finally {
-    setBusy(false);
-  }
-};
+  const handleShare = async () => {
+    if (busy) return;
+    setBusy('share');
+    try {
+      const path = await createPdf(title, html);
+      await sharePdf(title, path);
+    } catch (e) {
+      Alert.alert('Share nahi hui', e instanceof Error ? e.message : 'Unknown error');
+    } finally {
+      setBusy(null);
+    }
+  };
 
   return (
     <ScreenContainer edges={['left', 'right', 'bottom']} padded={false}>
@@ -53,14 +62,14 @@ export default function PreviewScreen({ navigation, route }: Props) {
         right={
           <View className="flex-row items-center">
             <HeaderAction
-              label={busy ? 'Creating...' : 'Download'}
+              label={busy === 'download' ? 'Saving...' : 'Download'}
               variant="accent"
               onPress={handleDownload}
             />
             <HeaderAction
-              label="Share"
-              variant='success'
-              onPress={() => console.log('Share PDF')}
+              label={busy === 'share' ? 'Preparing...' : 'Share'}
+              variant="outline"
+              onPress={handleShare}
             />
           </View>
         }
