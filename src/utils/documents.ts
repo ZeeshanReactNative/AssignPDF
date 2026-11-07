@@ -11,7 +11,7 @@ export type SavedDocument = {
   updatedAt: number; // Date.now()
    type?: 'saved' | 'pdf',
    cover?: CoverDetails;
-
+filePath?: string;
 };
 
 export async function getDocuments(): Promise<SavedDocument[]> {

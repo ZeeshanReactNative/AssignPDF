@@ -37,8 +37,8 @@ export function DocumentCard({
 <View className="h-12 w-10 items-center justify-center rounded-md bg-primary-light">
   <Icon
     name={isPdf ? 'filepdf' : 'file'}
-    size={22}
-    color={colors.primary.DEFAULT}
+    size={24}
+    
   />
 </View>
 

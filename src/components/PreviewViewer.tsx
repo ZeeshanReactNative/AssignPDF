@@ -11,6 +11,7 @@ import { buildCoverHtml, COVER_CSS } from '../utils/coverHtml';
 type PreviewViewerProps = {
   html: string; // document ka text
   cover?: CoverDetails; // nahi ho to cover nahi dikhta
+  onLoadEnd?: () => void;
 };
 
 // Document ka HTML script ke andar safe tareeqe se jane ke liye
@@ -162,7 +163,7 @@ const buildHtml = (content: string, coverHtml: string) => `
 </html>
 `;
 
-export function PreviewViewer({ html, cover }: PreviewViewerProps) {
+export function PreviewViewer({ html, cover, onLoadEnd}: PreviewViewerProps) {
   const source = useMemo(
     () => ({ html: buildHtml(html, cover ? buildCoverHtml(cover) : '') }),
     [html, cover],
@@ -173,6 +174,7 @@ export function PreviewViewer({ html, cover }: PreviewViewerProps) {
       originWhitelist={['*']}
       source={source}
       bounces={false}
+      onLoadEnd={onLoadEnd}
       showsVerticalScrollIndicator={false}
       style={{ flex: 1, backgroundColor: '#E8EEF9' }}
     />

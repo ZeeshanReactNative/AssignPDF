@@ -118,3 +118,4 @@ export async function sharePdf(title: string, filePath: string): Promise<void> {
     failOnCancel: false,
   });
 }
+export const PDF_FOLDER = 'AssignPDF';

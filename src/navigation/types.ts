@@ -12,6 +12,7 @@ export type RootStackParamList = {
   templateId: string;
   cover?: CoverDetails;
 };
+PdfViewer: { title: string; path: string };
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =

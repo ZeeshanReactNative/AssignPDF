@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -27,12 +28,13 @@ import {
   type CoverDetails,
   type CoverField,
 } from '../utils/cover';
+import { ActivityIndicator } from 'react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CoverForm'>;
 
 type TextField = Exclude<CoverField, 'submissionDate'>;
 
-// Form mein fields isi tarteeb se aati hain (template ki list se chhaanti jati hain)
+// Fields appear in this order (filtered from the template's field list).
 const FIELD_ORDER: CoverField[] = [
   'studentName',
   'rollNumber',
@@ -49,17 +51,17 @@ const FIELD_META: Record<TextField, { label: string; placeholder: string }> = {
   studentName: { label: 'Student Name', placeholder: 'e.g. Ali Khan' },
   rollNumber: { label: 'Roll Number', placeholder: 'e.g. 21-CS-045' },
   classSemester: { label: 'Class / Semester', placeholder: 'e.g. BSCS - 5th Semester' },
-  assignmentTitle: { label: 'Assignment Title *', placeholder: 'e.g. Database Design' },
-  subject: { label: 'Subject', placeholder: 'e.g. Database Systems' },
-  submittedTo: { label: 'Submitted To', placeholder: 'e.g. Sir Ahmed' },
+  assignmentTitle: { label: 'Assignment Title *', placeholder: 'e.g. Computer Type' },
+  subject: { label: 'Subject', placeholder: 'e.g. Computer' },
+  submittedTo: { label: 'Submitted To', placeholder: 'e.g. Sir Name' },
   department: { label: 'Department', placeholder: 'e.g. Computer Science' },
-  institute: { label: 'Institute / University Name', placeholder: 'e.g. University of Karachi' },
+  institute: { label: 'Institute / University Name', placeholder: 'e.g. University of Name' },
 };
 
 export default function CoverFormScreen({ navigation, route }: Props) {
   const { templateId, title } = route.params;
 
-  // Template na mile to pehla (Classic)
+  // Use the first template (Classic) if the specified template is not found.
   const template = getTemplate(templateId) ?? TEMPLATES[0];
   const visible = FIELD_ORDER.filter((field) => template.fields.includes(field));
   const textFields = visible.filter((f): f is TextField => f !== 'submissionDate');
@@ -69,7 +71,7 @@ export default function CoverFormScreen({ navigation, route }: Props) {
   const [date, setDate] = useState(new Date());
   const [showIosPicker, setShowIosPicker] = useState(false);
   const [titleError, setTitleError] = useState(false);
-
+const [saving, setSaving] = useState(false);
   useEffect(() => {
     getRememberedCover().then((remembered) =>
       setValues((current) => ({ ...current, ...remembered })),
@@ -98,11 +100,16 @@ export default function CoverFormScreen({ navigation, route }: Props) {
   };
 
   const handleContinue = async () => {
-    if (!values.assignmentTitle.trim()) {
-      setTitleError(true);
-      return;
-    }
+  if (saving) return;
 
+  if (!values.assignmentTitle.trim()) {
+    setTitleError(true);
+    return;
+  }
+
+  setSaving(true);
+
+  try {
     const cover: CoverDetails = {
       ...values,
       submissionDate: formatDate(date),
@@ -114,27 +121,34 @@ export default function CoverFormScreen({ navigation, route }: Props) {
       if (typeof value === 'string') cover[key] = value.trim();
     });
 
-    // Pehle yaad rakho (sab fields ke saath), phir is template mein jo fields nahi, unhein khali karo
-    await rememberCover(cover);
+    // Save all fields first, then clear the fields that are not included in this template.
+    await Promise.all([
+      rememberCover(cover),
+      new Promise<void>((resolve) => setTimeout(resolve, 1500)),
+    ]);
 
     const final: CoverDetails = { ...cover };
+
     FIELD_ORDER.forEach((field) => {
       if (!template.fields.includes(field)) final[field] = '';
     });
 
     navigation.replace('Editor', {
       templateId,
-      title: final.assignmentTitle || title, // document ka naam = assignment title
+      title: final.assignmentTitle || title,
       cover: final,
     });
-  };
+  } catch (e) {
+    setSaving(false);
+  }
+};
 
   return (
     <ScreenContainer edges={['left', 'right', 'bottom']} padded={false}>
       <Header
         title={`${template.name} Cover`}
         onBackPress={navigation.goBack}
-        right={<HeaderAction label="Skip" onPress={handleSkip} />}
+        right={<HeaderAction label="Skip" variant='accent' onPress={handleSkip} />}
       />
 
       <KeyboardAvoidingView
@@ -165,7 +179,7 @@ export default function CoverFormScreen({ navigation, route }: Props) {
                 />
                 {hasError ? (
                   <AppText variant="caption" className="mt-1 text-error">
-                    Assignment title zaroori hai
+                    Assignment title is required
                   </AppText>
                 ) : null}
               </View>
@@ -199,16 +213,27 @@ export default function CoverFormScreen({ navigation, route }: Props) {
         </ScrollView>
 
         <View className="border-t border-line bg-surface px-5 py-3">
-          <Pressable
-            onPress={handleContinue}
-            className="items-center rounded-xl bg-accent py-3.5 active:bg-accent-dark"
-          >
-            <AppText variant="button" className="text-white">
-              Save & Continue
-            </AppText>
-          </Pressable>
+         <Pressable
+  onPress={handleContinue}
+  disabled={saving}
+  className="items-center rounded-xl bg-accent py-3.5 active:bg-accent-dark"
+>
+  {saving ? (
+    <View className="flex-row items-center gap-2">
+      <ActivityIndicator size="small" color="#FFFFFF" />
+      <AppText variant="button" className="text-white">
+        Saving...
+      </AppText>
+    </View>
+  ) : (
+    <AppText variant="button" className="text-white">
+      Save & Continue
+    </AppText>
+  )}
+</Pressable>
         </View>
       </KeyboardAvoidingView>
     </ScreenContainer>
   );
+
 }
